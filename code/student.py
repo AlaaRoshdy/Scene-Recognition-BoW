@@ -5,6 +5,7 @@ from skimage.color import rgb2grey
 from skimage.feature import hog
 from skimage.transform import resize
 from scipy.spatial.distance import cdist
+from scipy.stats import mode
 
 
 def get_tiny_images(image_paths):
@@ -38,9 +39,11 @@ def get_tiny_images(image_paths):
                          skimage.io.imread, np.reshape
     """
 
-    # TODO: Implement this function!
+    tiny_ims = np.zeros((len(image_paths), 256))
+    for i, path in enumerate(image_paths):
+        tiny_ims[i] = resize(rgb2grey(imread(path)), (16,16)).reshape((-1,))
 
-    return np.array([])
+    return tiny_ims
 
 
 def build_vocabulary(image_paths, vocab_size):
@@ -224,15 +227,21 @@ def nearest_neighbor_classify(train_image_feats, train_labels, test_image_feats)
     """
 
     k = 1
-
+    USE_WEIGHTS = False
     # Gets the distance between each test image feature and each train image feature
     # e.g., cdist
     distances = cdist(test_image_feats, train_image_feats, 'euclidean')
 
-    # TODO:
     # 1) Find the k closest features to each test image feature in euclidean space
+    top_k_inds = np.argpartition(distances, k, axis=1)[:, :k]
     # 2) Determine the labels of those k features
+    top_k_labels = np.asarray(train_labels)[top_k_inds]
     # 3) Pick the most common label from the k
-    # 4) Store that label in a list
+    if USE_WEIGHTS: 
+        # Incomplete
+        top_k_dists = np.array([distances[i, top_k_inds[i]] for i
+        in range( distances.shape[0])])
+    else:
+        best_label = mode(top_k_labels,  axis = 1).mode
 
-    return np.array([])
+    return best_label 
