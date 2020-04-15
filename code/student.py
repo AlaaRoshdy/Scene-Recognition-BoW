@@ -6,6 +6,7 @@ from skimage.feature import hog
 from skimage.transform import resize
 from scipy.spatial.distance import cdist
 from scipy.stats import mode
+from sklearn.cluster import KMeans
 
 
 def get_tiny_images(image_paths):
@@ -115,10 +116,20 @@ def build_vocabulary(image_paths, vocab_size):
     may also find success setting the "tol" argument (see documentation for
     details)
     """
+    features = None
+    for im_path in image_paths:
+        im = rgb2grey(imread(im_path))
+        cells_per_block=3
+        im_hog = hog(im, cells_per_block=(cells_per_block, cells_per_block))
+        im_hog = im_hog.reshape(-1, cells_per_block*cells_per_block*9)
+        if features is None:
+            features = im_hog
+        else:
+            features = np.vstack([features, im_hog])
+    clf = KMeans(vocab_size, max_iter=100, tol=1e-3)
+    clf.fit(features)
 
-    # TODO: Implement this function!
-
-    return np.array([])
+    return clf.cluster_centers_
 
 
 def get_bags_of_words(image_paths):
