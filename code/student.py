@@ -127,7 +127,7 @@ def build_vocabulary(image_paths, vocab_size):
             features = im_hog
         else:
             features = np.vstack([features, im_hog])
-    clf = KMeans(vocab_size, max_iter=100, tol=1e-3)
+    clf = KMeans(vocab_size, max_iter=100, tol=1e-3, n_jobs= -1)
     clf.fit(features)
 
     return clf.cluster_centers_
@@ -165,10 +165,23 @@ def get_bags_of_words(image_paths):
 
     vocab = np.load('vocab.npy')
     print('Loaded vocab from file.')
-
-    # TODO: Implement this function!
-
-    return np.array([])
+    im_words = np.zeros((len(image_paths),len(vocab)))
+        
+    for i, im_path in enumerate(image_paths):
+        # HOG
+        im = rgb2grey(imread(im_path))
+        cells_per_block=3
+        im_hog = hog(im, cells_per_block=(cells_per_block, cells_per_block))
+        im_hog = im_hog.reshape(-1, cells_per_block*cells_per_block*9)
+        # Calculate distances
+        dist = cdist(vocab, im_hog, 'euclidean')
+        # Sort the columns (for each vocab) in ascending order
+        idx = np.argsort(dist, axis=0)
+        # Create a histogram for the closest distances
+        hist, _ = np.histogram(idx[0,:], bins=len(vocab))
+        im_words[i] = hist/np.linalg.norm(hist)
+    
+    return im_words
 
 
 def svm_classify(train_image_feats, train_labels, test_image_feats):
