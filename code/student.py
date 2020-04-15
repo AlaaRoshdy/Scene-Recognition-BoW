@@ -6,7 +6,7 @@ from skimage.feature import hog
 from skimage.transform import resize
 from scipy.spatial.distance import cdist
 from scipy.stats import mode
-
+from sklearn.svm import SVC
 
 def get_tiny_images(image_paths):
     """
@@ -183,8 +183,10 @@ def svm_classify(train_image_feats, train_labels, test_image_feats):
     """
 
     # TODO: Implement this function!
+    clf = SVC(C=2.0, kernel='rbf')
+    clf.fit(train_image_feats, train_labels)
 
-    return np.array([])
+    return clf.predict(test_image_feats)
 
 
 def nearest_neighbor_classify(train_image_feats, train_labels, test_image_feats):
